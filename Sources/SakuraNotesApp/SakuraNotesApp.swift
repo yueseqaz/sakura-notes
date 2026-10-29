@@ -261,6 +261,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let environment = AppEnvironment.shared
+        // Bare executables (swift run) default to a background policy; the
+        // packaged .app is regular via its Info.plist. Keep behavior identical.
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
         registerHotkey()
 
         settingsObserver = NotificationCenter.default.addObserver(

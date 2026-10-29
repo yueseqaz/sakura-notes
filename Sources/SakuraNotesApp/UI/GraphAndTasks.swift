@@ -48,6 +48,7 @@ struct GraphWindowSheet: View {
                 }
                 .buttonStyle(.plain)
                 .keyboardShortcut(.cancelAction)
+                .accessibilityLabel("Close graph")
             }
             .padding(DS.spaceM)
             HairlineDivider()
@@ -442,6 +443,7 @@ struct TasksSheet: View {
                 }
                 .buttonStyle(.plain)
                 .keyboardShortcut(.cancelAction)
+                .accessibilityLabel("Close tasks")
             }
             .padding(DS.spaceM)
             HairlineDivider()

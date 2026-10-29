@@ -117,26 +117,21 @@ public enum HTMLRenderer {
     }
 
     private static func listItemContainsCheckbox(_ node: Markup) -> Bool {
-        guard let item = node as? ListItem, let paragraph = item.child(at: 0) else { return false }
-        let text = plainText(paragraph).trimmingCharacters(in: .whitespaces)
-        return text.hasPrefix("[ ]") || text.hasPrefix("[x]") || text.hasPrefix("[X]")
+        guard let item = node as? ListItem else { return false }
+        return item.checkbox != nil
     }
 
     private static func renderListItems<S: Sequence>(_ items: S, options: Options) -> String where S.Element == Markup {
         items.map { item in
             guard let listItem = item as? ListItem else { return "<li></li>" }
-            let firstChild = listItem.child(at: 0)
-            if let firstChild, let text = firstChild as? Paragraph {
-                let raw = plainText(text).trimmingCharacters(in: .whitespaces)
-                if raw.hasPrefix("[ ]") || raw.hasPrefix("[x]") || raw.hasPrefix("[X]") {
-                    let checked = raw.hasPrefix("[x]") || raw.hasPrefix("[X]")
-                    let body = renderChildren(text, options: options, stripTaskPrefix: true)
-                    let checkbox = options.renderCheckboxes
-                        ? "<input type=\"checkbox\" disabled\(checked ? " checked" : "") /> "
-                        : (checked ? "☑ " : "☐ ")
-                    let rest = renderBlocks(listItem.children.dropFirst(), options: options)
-                    return "<li class=\"task-item\(checked ? " done" : "")\">\(checkbox)\(body)\(rest)</li>\n"
-                }
+            if let checkbox = listItem.checkbox, let firstChild = listItem.child(at: 0) {
+                let checked = checkbox == .checked
+                let body = renderChildren(firstChild, options: options)
+                let box = options.renderCheckboxes
+                    ? "<input type=\"checkbox\" disabled\(checked ? " checked" : "") /> "
+                    : (checked ? "☑ " : "☐ ")
+                let rest = renderBlocks(listItem.children.dropFirst(), options: options)
+                return "<li class=\"task-item\(checked ? " done" : "")\">\(box)\(body)\(rest)</li>\n"
             }
             return "<li>\(renderBlocks(listItem.children, options: options))</li>\n"
         }.joined()
@@ -173,24 +168,12 @@ public enum HTMLRenderer {
 
     // MARK: - Inlines
 
-    private static func renderChildren(_ node: Markup, options: Options, stripTaskPrefix: Bool = false) -> String {
+    private static func renderChildren(_ node: Markup, options: Options) -> String {
         var out = ""
-        for (index, child) in node.children.enumerated() {
-            if stripTaskPrefix && index == 0, let text = child as? Text {
-                out += renderInlineTextStrippingTaskPrefix(text)
-            } else {
-                out += renderInline(child, options: options)
-            }
+        for child in node.children {
+            out += renderInline(child, options: options)
         }
         return out
-    }
-
-    private static func renderInlineTextStrippingTaskPrefix(_ text: Text) -> String {
-        var string = text.string
-        if string.hasPrefix("[ ]") || string.hasPrefix("[x]") || string.hasPrefix("[X]") {
-            string = String(string.dropFirst(3))
-        }
-        return StringUtilities.htmlEscaped(string)
     }
 
     private static func renderInline(_ node: Markup, options: Options) -> String {

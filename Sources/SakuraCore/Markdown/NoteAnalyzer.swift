@@ -177,18 +177,13 @@ public enum NoteAnalyzer {
         for child in node.children { collectText(child, into: &parts) }
     }
 
-    /// Parses `- [ ] text` / `- [x] text` from a list item.
+    /// Parses task list items. cmark consumes the `[ ]`/`[x]` marker into
+    /// the ListItem's checkbox, so the text is the remainder of the line.
     private static func parseTask(from item: ListItem) -> (String, Bool)? {
+        guard let checkbox = item.checkbox else { return nil }
         guard let paragraph = item.child(at: 0) else { return nil }
-        let text = plainText(of: paragraph)
-        let trimmed = text.trimmingCharacters(in: .whitespaces)
-        if trimmed.hasPrefix("[ ]") {
-            return (String(trimmed.dropFirst(3)).trimmingCharacters(in: .whitespaces), false)
-        }
-        if trimmed.hasPrefix("[x]") || trimmed.hasPrefix("[X]") {
-            return (String(trimmed.dropFirst(3)).trimmingCharacters(in: .whitespaces), true)
-        }
-        return nil
+        let text = plainText(of: paragraph).trimmingCharacters(in: .whitespaces)
+        return (text, checkbox == .checked)
     }
 
     static func parseDueDate(_ text: String) -> Date? {

@@ -125,24 +125,14 @@ struct QuickSwitcherView: View {
         .overlay(RoundedRectangle(cornerRadius: DS.radiusL).stroke(Color.primary.opacity(0.12), lineWidth: 0.5))
         .shadow(color: .black.opacity(0.25), radius: 24, y: 8)
         .onAppear { fieldFocused = true }
-        .background(keyHandler)
-    }
-
-    private var keyHandler: some View {
-        Color.clear
-            .frame(width: 0, height: 0)
-            .onExitCommand {
-                isPresented = false
+        .onExitCommand { isPresented = false }
+        .onMoveCommand { direction in
+            switch direction {
+            case .up: selectedIndex = max(0, selectedIndex - 1)
+            case .down: selectedIndex = min(candidates.count - 1, selectedIndex + 1)
+            default: break
             }
-            .overlay(
-                // Up/Down navigation via keyboard events on the window.
-                KeyEventCatcher(onUp: {
-                    selectedIndex = max(0, selectedIndex - 1)
-                }, onDown: {
-                    selectedIndex = min(candidates.count - 1, selectedIndex + 1)
-                })
-                .frame(width: 0, height: 0)
-            )
+        }
     }
 
     private func open(_ index: Int) {
@@ -321,13 +311,14 @@ struct CommandPaletteView: View {
         .overlay(RoundedRectangle(cornerRadius: DS.radiusL).stroke(Color.primary.opacity(0.12), lineWidth: 0.5))
         .shadow(color: .black.opacity(0.25), radius: 24, y: 8)
         .onAppear { fieldFocused = true }
-        .background(
-            KeyEventCatcher(onUp: { selectedIndex = max(0, selectedIndex - 1) }, onDown: {
-                selectedIndex = min(filtered.count - 1, selectedIndex + 1)
-            })
-            .frame(width: 0, height: 0)
-        )
         .onExitCommand { isPresented = false }
+        .onMoveCommand { direction in
+            switch direction {
+            case .up: selectedIndex = max(0, selectedIndex - 1)
+            case .down: selectedIndex = min(filtered.count - 1, selectedIndex + 1)
+            default: break
+            }
+        }
     }
 
     private func run(_ index: Int) {

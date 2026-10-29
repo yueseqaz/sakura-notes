@@ -32,7 +32,7 @@ public final class SnapshotStore {
     private let fileManager = FileManager.default
     private let timestampFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime]
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter
     }()
 
@@ -165,7 +165,7 @@ public final class SnapshotStore {
 
     private static func fileName(for date: Date) -> String {
         let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime]
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter.string(from: date) + ".md"
     }
 }

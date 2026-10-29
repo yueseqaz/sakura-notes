@@ -76,7 +76,10 @@ public struct SearchQuery: Equatable {
                 if !value.isEmpty { query.titleFilters.append(value.lowercased()) }
             } else if lower.hasPrefix("before:") {
                 let value = String(token.dropFirst(7))
-                query.modifiedBefore = dateFormatter.date(from: value) ?? query.modifiedBefore
+                // Inclusive of the whole given day.
+                if let date = dateFormatter.date(from: value) {
+                    query.modifiedBefore = date.addingTimeInterval(86_400)
+                }
             } else if lower.hasPrefix("after:") {
                 let value = String(token.dropFirst(6))
                 if let date = dateFormatter.date(from: value) {

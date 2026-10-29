@@ -31,6 +31,8 @@ public final class LinkIndex {
     private var linksByPath: [String: NoteLinks] = [:]
     /// title (lowercased) → note paths
     private var pathsByTitle: [String: Set<String>] = [:]
+    /// file name without extension (lowercased) → note paths
+    private var pathsByFileName: [String: Set<String>] = [:]
 
     public init() {}
 
@@ -49,8 +51,14 @@ public final class LinkIndex {
             if case .wikiLink(let target, _) = link.kind { return target }
             return nil
         }
+        if let existing = linksByPath[path] {
+            let oldFileKey = (((existing.folder as NSString).lastPathComponent) as NSString).deletingPathExtension.lowercased()
+            pathsByFileName[oldFileKey]?.remove(path)
+        }
         linksByPath[path] = NoteLinks(title: title, folder: (path as NSString).deletingLastPathComponent, outgoing: targets)
         pathsByTitle[title.lowercased(), default: []].insert(path)
+        let fileNameKey = (((path as NSString).lastPathComponent) as NSString).deletingPathExtension.lowercased()
+        pathsByFileName[fileNameKey, default: []].insert(path)
     }
 
     public func remove(path: String) {
@@ -60,6 +68,9 @@ public final class LinkIndex {
             let key = existing.title.lowercased()
             pathsByTitle[key]?.remove(path)
             if pathsByTitle[key]?.isEmpty == true { pathsByTitle.removeValue(forKey: key) }
+            let fileKey = (((path as NSString).lastPathComponent) as NSString).deletingPathExtension.lowercased()
+            pathsByFileName[fileKey]?.remove(path)
+            if pathsByFileName[fileKey]?.isEmpty == true { pathsByFileName.removeValue(forKey: fileKey) }
         }
     }
 
@@ -78,6 +89,7 @@ public final class LinkIndex {
         defer { lock.unlock() }
         linksByPath.removeAll()
         pathsByTitle.removeAll()
+        pathsByFileName.removeAll()
     }
 
     // MARK: - Queries
@@ -182,7 +194,8 @@ public final class LinkIndex {
         let clean = target.trimmingCharacters(in: .whitespaces)
         guard !clean.isEmpty else { return nil }
         if linksByPath[clean] != nil { return clean }
-        let candidates = pathsByTitle[clean.lowercased()] ?? []
+        let lowered = clean.lowercased()
+        let candidates = pathsByTitle[lowered] ?? pathsByFileName[lowered] ?? []
         if !candidates.isEmpty {
             if let sameFolder = candidates.first(where: { ($0 as NSString).deletingLastPathComponent == fromFolder }) {
                 return sameFolder

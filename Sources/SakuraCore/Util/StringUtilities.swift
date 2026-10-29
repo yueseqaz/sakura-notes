@@ -21,21 +21,18 @@ public enum StringUtilities {
     }
 
     /// POSIX relative path from one directory to a file, using "/" separators.
-    /// Returns `nil` when no relative relationship exists (different roots).
+    /// `directory` is treated as a directory whether or not its URL carries a
+    /// trailing slash. Returns `nil` when the two are on different roots.
     public static func relativePath(from directory: URL, to file: URL) -> String? {
         let dirComps = directory.standardizedFileURL.pathComponents
         let fileComps = file.standardizedFileURL.pathComponents
-        guard directory.hasDirectoryPath else { return relativePath(from: directory.deletingLastPathComponent(), to: file) }
         var i = 0
         while i < dirComps.count && i < fileComps.count && dirComps[i] == fileComps[i] {
             i += 1
         }
-        // A trailing "." from directory paths is not a real component.
-        var dirCount = dirComps.count
-        if dirComps.last == "." { dirCount -= 1 }
         guard i >= 1, i <= fileComps.count else { return nil }
         var comps: [String] = []
-        for _ in i..<dirCount { comps.append("..") }
+        for _ in i..<dirComps.count { comps.append("..") }
         comps.append(contentsOf: fileComps[i...])
         return comps.joined(separator: "/")
     }

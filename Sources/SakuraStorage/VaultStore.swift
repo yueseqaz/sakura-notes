@@ -100,6 +100,14 @@ public final class VaultStore: ObservableObject {
 
     // MARK: - Path handling
 
+    /// True when a relative path is safe to pass to `absoluteURL(for:)`:
+    /// non-empty, no leading slash, and no `.`/`..` components.
+    public static func isSafeRelativePath(_ relativePath: String) -> Bool {
+        guard !relativePath.isEmpty, !relativePath.hasPrefix("/") else { return false }
+        let components = relativePath.split(separator: "/").map(String.init)
+        return !components.isEmpty && !components.contains("..") && !components.contains(".")
+    }
+
     /// Converts a relative POSIX path into an absolute URL, refusing traversal.
     public func absoluteURL(for relativePath: String) -> URL {
         let components = relativePath.split(separator: "/").map(String.init)

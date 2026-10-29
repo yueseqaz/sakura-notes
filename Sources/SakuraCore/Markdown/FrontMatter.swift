@@ -94,8 +94,9 @@ public struct FrontMatter: Equatable {
         }
 
         for line in lines[1..<end] {
-            if line.hasPrefix("- ") || line == "-" {
-                let item = String(line.dropFirst(2)).trimmingCharacters(in: .whitespaces)
+            let trimmedForList = line.trimmingCharacters(in: .whitespaces)
+            if trimmedForList.hasPrefix("- ") || trimmedForList == "-" {
+                let item = String(trimmedForList.dropFirst(2)).trimmingCharacters(in: .whitespaces)
                     .trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
                 if currentList == nil { currentList = [] }
                 currentList?.append(item)

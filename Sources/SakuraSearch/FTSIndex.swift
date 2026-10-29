@@ -259,14 +259,12 @@ public final class FTSIndex {
             }
             whereClauses.append(contentsOf: excludedClauses)
 
-            // Prefer title matches, then FTS rank, then recency.
-            let titleParamIndex = params.count + 1
-            let firstTerm = (query.terms.first ?? query.phrases.first ?? "").lowercased()
-            let orderBy = matchExpression != nil ? "in_title DESC, rank" : "n.mtime DESC"
+            // Title-match preference is applied in Swift below (keeping the
+            // SQL parameter list positionally simple).
+            let orderBy = matchExpression != nil ? "rank" : "n.mtime DESC"
             let sql = """
             SELECT n.path, n.title, snippet(notes_fts, 1, '<mark>', '</mark>', '…', 24) AS snip,
-                   n.mtime,
-                   (LOWER(n.title) LIKE ?) AS in_title
+                   n.mtime
             FROM notes_fts
             JOIN notes n ON n.id = notes_fts.rowid
             WHERE \(whereClauses.joined(separator: " AND "))
@@ -281,15 +279,21 @@ public final class FTSIndex {
                 bind(statement, index, param)
                 index += 1
             }
-            bind(statement, Int32(titleParamIndex), "%\(firstTerm)%")
             var results: [SearchResult] = []
             while sqlite3_step(statement) == SQLITE_ROW, results.count < limit {
                 let path = columnString(statement, 0)
                 let title = columnString(statement, 1)
                 let snippet = columnString(statement, 2)
                 let mtime = Date(timeIntervalSince1970: sqlite3_column_double(statement, 3))
-                let inTitle = sqlite3_column_int64(statement, 4) != 0
+                let firstTerm = (query.terms.first ?? query.phrases.first ?? "").lowercased()
+                let inTitle = !firstTerm.isEmpty && title.lowercased().contains(firstTerm)
                 results.append(SearchResult(path: path, title: title, snippet: snippet, matchedInTitle: inTitle, modificationDate: mtime))
+            }
+            if matchExpression != nil {
+                results.sort { lhs, rhs in
+                    if lhs.matchedInTitle != rhs.matchedInTitle { return lhs.matchedInTitle }
+                    return false
+                }
             }
             return results
         }

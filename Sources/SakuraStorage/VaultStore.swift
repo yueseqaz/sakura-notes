@@ -508,6 +508,12 @@ public final class VaultStore: ObservableObject {
         return newRelativePath
     }
 
+    /// True when the given vault-relative path is a directory on disk.
+    public func isFolder(_ relativePath: String) -> Bool {
+        var isDir: ObjCBool = false
+        return fileManager.fileExists(atPath: absoluteURL(for: relativePath).path, isDirectory: &isDir) && isDir.boolValue
+    }
+
     private func relativePathIsFolder(_ relativePath: String) -> Bool {
         var isDir: ObjCBool = false
         return fileManager.fileExists(atPath: absoluteURL(for: relativePath).path, isDirectory: &isDir) && isDir.boolValue

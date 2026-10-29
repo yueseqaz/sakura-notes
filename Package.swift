@@ -34,7 +34,7 @@ let package = Package(
         ),
         .target(
             name: "SakuraSearch",
-            dependencies: ["SakuraCore"],
+            dependencies: ["SakuraCore", "SakuraStorage"],
             swiftSettings: [.swiftLanguageMode(.v5)],
             linkerSettings: [.linkedLibrary("sqlite3")]
         ),
@@ -53,7 +53,7 @@ let package = Package(
         ),
         .testTarget(
             name: "SakuraNotesTests",
-            dependencies: ["SakuraCore", "SakuraStorage", "SakuraSearch", "SakuraAI"],
+            dependencies: ["SakuraCore", "SakuraStorage", "SakuraSearch", "SakuraAI", "SakuraNotesApp"],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
     ]

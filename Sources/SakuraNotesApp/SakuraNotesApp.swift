@@ -54,6 +54,10 @@ struct SakuraNotesApp: App {
                     WorkspacePicker.openAndSelect(environment: AppEnvironment.shared)
                 }
                 .keyboardShortcut("o", modifiers: [.command, .shift])
+
+                Button("Open Workspace in Terminal") {
+                    NotificationCenter.default.post(name: .sakuraCommand, object: nil, userInfo: ["command": "openInTerminal"])
+                }
             }
 
             CommandGroup(replacing: .saveItem) {
@@ -291,7 +295,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func registerHotkey() {
+    @MainActor private func registerHotkey() {
         let settings = AppEnvironment.shared.settings
         hotkey.register(keyCode: settings.quickCaptureKeyCode, modifiers: settings.quickCaptureModifiers)
     }

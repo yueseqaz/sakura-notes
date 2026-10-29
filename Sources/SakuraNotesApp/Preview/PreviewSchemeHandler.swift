@@ -121,24 +121,11 @@ final class PreviewSchemeHandler: NSObject, WKURLSchemeHandler {
             let raw = ns.substring(with: match.range(at: 1))
             let decoded = raw.removingPercentEncoding ?? raw
             if decoded.isEmpty || decoded.hasPrefix("data:") || decoded.hasPrefix("http") { continue }
-            let resolved = resolvePath(base: noteFolder, relative: decoded)
+            let resolved = PreviewPathResolver.resolve(base: noteFolder, relative: decoded)
             let replacement = "src=\"\(scheme)://file/\(StringUtilities.urlPathEncoded(resolved))\""
             result = (result as NSString).replacingCharacters(in: match.range, with: replacement)
         }
         return result
     }
 
-    /// Resolves `relative` against `base` without touching the filesystem,
-    /// handling `..` and `.` segments.
-    static func resolvePath(base: String, relative: String) -> String {
-        var components = base.split(separator: "/").map(String.init)
-        for part in relative.split(separator: "/") {
-            switch part {
-            case "..": components.removeLast()
-            case ".", "": continue
-            default: components.append(String(part))
-            }
-        }
-        return components.joined(separator: "/")
-    }
 }

@@ -208,6 +208,7 @@ struct WorkspaceRootView: View {
                 environment.searchCoordinator?.rebuildAll(vault: vault)
             }
         case "revealNote": revealCurrentNote()
+        case "openInTerminal": openWorkspaceInTerminal()
         case "renameNote": requestRename()
         case "duplicateNote": duplicateCurrent()
         case "trashNote": trashCurrent()
@@ -320,6 +321,28 @@ struct WorkspaceRootView: View {
     private func revealCurrentNote() {
         guard let path = model.activeTab?.path, let vault = environment.vault else { return }
         NSWorkspace.shared.activateFileViewerSelecting([vault.absoluteURL(for: path)])
+    }
+
+    private func openWorkspaceInTerminal() {
+        guard let vault = environment.vault else { return }
+        let url: URL
+        if let folder = model.selectedFolder {
+            url = vault.absoluteURL(for: folder)
+        } else {
+            url = vault.rootURL
+        }
+        let escaped = url.path.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+        let source = """
+        tell application "Terminal"
+            do script "cd \\"\(escaped)\\""
+            activate
+        end tell
+        """
+        var error: NSDictionary?
+        NSAppleScript(source: source)?.executeAndReturnError(&error)
+        if error != nil {
+            environment.lastVaultError = "Could not open Terminal. macOS may need permission: System Settings → Privacy & Security → Automation."
+        }
     }
 
     // MARK: - Export / Import

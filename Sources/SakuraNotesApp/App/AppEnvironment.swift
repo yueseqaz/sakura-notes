@@ -372,6 +372,17 @@ extension AppEnvironment: @preconcurrency VaultDelegate {
             object: nil,
             userInfo: ["from": movedFrom, "to": to, "vault": vault.rootURL]
         )
+        // Keep internal links pointing at the moved item.
+        let report = LinkUpdater.updateLinksAfterMove(
+            vault: vault,
+            search: searchCoordinator,
+            snapshots: snapshotStore,
+            from: movedFrom,
+            to: to
+        )
+        if report.notesUpdated > 0 {
+            lastVaultError = "Updated \(report.linksRewritten) link(s) in \(report.notesUpdated) note(s) to follow the move."
+        }
     }
 
     func vaultDidReload(_ vault: VaultStore) {

@@ -119,7 +119,7 @@ Honest list of what is not implemented (yet):
 - No code signing or notarization (no Developer ID credentials in this project)
 - No document cloud sync of its own — use iCloud/Dropbox/etc. folders; the app detects and resolves the conflict copies sync services produce, but each provider's semantics are its own
 - No plugin system, web clipper, presentation mode, or Spotlight/Shortcuts integration (roadmap)
-- No per-note pinning/favorites UI, batch tag editing, or side-by-side comparison of two different notes
+- No per-note pinning/favorites UI, batch tag editing, side-by-side comparison of two different notes, or tab drag-reordering
 - The graph view is read-only (no drag-to-arrange persistence)
 - Reminders/due-date notifications are parsed (`@due(YYYY-MM-DD)`) but not surfaced as notifications yet
 

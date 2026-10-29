@@ -111,7 +111,7 @@ public final class WorkspaceStore {
         guard let data = try? Data(contentsOf: fileURL),
               let payload = try? JSONDecoder().decode(Payload.self, from: data) else { return }
         workspaces = payload.workspaces
-        recentFiles = payload.recentFiles ?? [:]
+        recentFiles = payload.recentFiles
     }
 
     private func save() {

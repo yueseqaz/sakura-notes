@@ -260,6 +260,7 @@ struct EditorToolbar: View {
         }
         .buttonStyle(.plain)
         .help(help)
+        .accessibilityLabel(help)
     }
 
     private func headingMenuItem(_ level: Int) -> NSMenuItem {
@@ -401,6 +402,7 @@ struct BacklinksPanel: View {
     @VS private var showsMentions = false
 
     var body: some View {
+        let broken = environment.linkIndex.brokenLinks(from: session.path)
         VStack(alignment: .leading, spacing: DS.spaceXS) {
             let backlinks = environment.linkIndex.backlinks(to: session.path)
             let mentions = showsMentions ? environment.unlinkedMentions(of: session.displayTitle, excludingPath: session.path) : []
@@ -409,6 +411,12 @@ struct BacklinksPanel: View {
                     .font(DS.caption())
                     .fontWeight(.medium)
                     .foregroundColor(.secondary)
+                if !broken.isEmpty {
+                    Text("· \(broken.count) broken link\(broken.count == 1 ? "" : "s")")
+                        .font(DS.caption())
+                        .foregroundColor(.orange)
+                        .help("Wiki links in this note that don't resolve to any note")
+                }
                 Spacer()
                 Button(showsMentions ? "Hide mentions" : "Unlinked mentions") {
                     showsMentions.toggle()
@@ -420,8 +428,36 @@ struct BacklinksPanel: View {
             .padding(.horizontal, DS.spaceL)
             .padding(.top, DS.spaceS)
 
-            if backlinks.isEmpty && mentions.isEmpty {
-                Text(showsMentions ? "No backlinks or unlinked mentions." : "No notes link here yet.")
+            if !broken.isEmpty {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(broken, id: \.self) { target in
+                            Button {
+                                if let entry = environment.createNote(inFolder: "", title: target) {
+                                    NotificationCenter.default.post(name: .sakuraOpenNote, object: nil, userInfo: ["path": entry.relativePath])
+                                }
+                            } label: {
+                                HStack(spacing: DS.spaceXS) {
+                                    Image(systemName: "link.badge.plus")
+                                        .font(.system(size: 9))
+                                        .foregroundColor(.orange)
+                                    Text("\(target) — click to create")
+                                        .font(DS.secondary(12))
+                                        .lineLimit(1)
+                                    Spacer()
+                                }
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, DS.spaceL)
+                }
+                .frame(maxHeight: 60)
+            }
+
+            if backlinks.isEmpty && mentions.isEmpty && broken.isEmpty {
+                Text("No notes link here yet.")
                     .font(DS.caption())
                     .foregroundColor(.secondary.opacity(0.8))
                     .padding(.horizontal, DS.spaceL)

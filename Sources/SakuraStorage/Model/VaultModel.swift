@@ -44,9 +44,11 @@ public final class FolderNode: Hashable {
 }
 
 /// A node in the vault tree.
-public enum VaultNode: Hashable {
+public enum VaultNode: Hashable, Identifiable {
     case folder(FolderNode)
     case note(NoteEntry)
+
+    public var id: String { relativePath }
 
     public var name: String {
         switch self {

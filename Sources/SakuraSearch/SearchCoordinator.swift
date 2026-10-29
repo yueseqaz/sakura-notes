@@ -182,4 +182,9 @@ public final class SearchCoordinator: NSObject, ObservableObject, VaultDelegate 
     public func status() -> IndexStatus {
         IndexStatus(noteCount: noteCount, isReady: index.isAvailable && buildProgress == nil, lastError: lastError)
     }
+
+    /// Notes containing `text` as a substring (for unlinked mentions).
+    public func notesContaining(text: String, excludingPath: String) -> [String] {
+        index.notesContaining(text: text, excludingPath: excludingPath)
+    }
 }

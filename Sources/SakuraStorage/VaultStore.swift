@@ -241,9 +241,11 @@ public final class VaultStore: ObservableObject {
         }
 
         func relativeChildPath(_ parent: URL, _ child: URL, _ root: URL) -> String {
+            let parentPath = parent.standardizedFileURL.path
+            let rootPath = root.standardizedFileURL.path
             let parentRelative: String
-            if parent == root { parentRelative = "" } else {
-                parentRelative = parent.path.dropFirst(root.path.count + 1).description
+            if parentPath == rootPath { parentRelative = "" } else {
+                parentRelative = parentPath.dropFirst(rootPath.count + 1).description
             }
             return parentRelative.isEmpty ? child.lastPathComponent : "\(parentRelative)/\(child.lastPathComponent)"
         }
@@ -272,6 +274,21 @@ public final class VaultStore: ObservableObject {
             return try Data(contentsOf: url)
         } catch {
             throw VaultError.readFailed(path: relativePath, underlying: error.localizedDescription)
+        }
+    }
+
+    /// Writes arbitrary data (e.g. an image attachment) into the vault and
+    /// refreshes the model so the new file shows up immediately.
+    public func writeData(_ data: Data, toRelativePath relativePath: String) throws {
+        try AtomicFile.write(data, to: absoluteURL(for: relativePath))
+        if let date = currentModificationDate(of: relativePath) {
+            trackedMTimes[relativePath] = date
+        }
+        if noteEntry(at: relativePath) == nil {
+            // New file: refresh the tree so it appears right away.
+            rescan()
+        } else {
+            updateEntryAfterWrite(relativePath)
         }
     }
 

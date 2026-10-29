@@ -95,6 +95,11 @@ public final class WorkspaceStore {
         recentFiles[workspacePath] ?? []
     }
 
+    public func clearRecentFiles() {
+        recentFiles.removeAll()
+        save()
+    }
+
     // MARK: - Persistence
 
     private struct Payload: Codable {

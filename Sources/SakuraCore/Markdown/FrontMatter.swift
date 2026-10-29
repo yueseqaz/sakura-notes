@@ -109,8 +109,20 @@ public struct FrontMatter: Equatable {
             if rawValue.isEmpty {
                 currentKey = key
             } else {
-                let value = rawValue.trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
-                entries.append((key, .scalar(value)))
+                // Flow-style list: tags: [a, b]
+                let trimmedValue = rawValue.trimmingCharacters(in: .whitespaces)
+                if trimmedValue.hasPrefix("[") && trimmedValue.hasSuffix("]") {
+                    let inner = String(trimmedValue.dropFirst().dropLast())
+                    let items = inner.split(separator: ",").map {
+                        $0.trimmingCharacters(in: .whitespaces)
+                            .trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
+                    }
+                    .filter { !$0.isEmpty }
+                    entries.append((key, .list(items)))
+                } else {
+                    let value = rawValue.trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
+                    entries.append((key, .scalar(value)))
+                }
             }
         }
         flush()

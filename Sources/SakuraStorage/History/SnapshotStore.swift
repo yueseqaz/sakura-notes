@@ -49,7 +49,7 @@ public final class SnapshotStore {
 
     /// Stable per-vault directory name derived from the vault root path.
     /// Hashed rather than used raw so paths with slashes are safe.
-    static func vaultFolderName(for vaultRoot: URL) -> String {
+    public static func vaultFolderName(for vaultRoot: URL) -> String {
         let raw = vaultRoot.standardizedFileURL.path
         // FNV-1a 64-bit for a short, stable, filesystem-safe identifier.
         var hash: UInt64 = 0xcbf29ce484222325

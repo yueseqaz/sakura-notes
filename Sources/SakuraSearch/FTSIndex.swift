@@ -327,6 +327,33 @@ public final class FTSIndex {
         return expression
     }
 
+    /// Notes whose body or title contains `text` as a substring, excluding
+    /// `excludingPath`. Used for unlinked-mention suggestions.
+    public func notesContaining(text: String, excludingPath: String, limit: Int = 50) -> [String] {
+        queue.sync { () -> [String] in
+            guard let db, !text.isEmpty else { return [] }
+            var statement: OpaquePointer?
+            defer { sqlite3_finalize(statement) }
+            let sql = """
+            SELECT n.path FROM notes_fts
+            JOIN notes n ON n.id = notes_fts.rowid
+            WHERE (notes_fts.body LIKE ? OR n.title LIKE ?) AND n.path != ?
+            ORDER BY n.mtime DESC
+            LIMIT ?
+            """
+            guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else { return [] }
+            bind(statement, 1, "%\(text)%")
+            bind(statement, 2, "%\(text)%")
+            bind(statement, 3, excludingPath)
+            sqlite3_bind_int64(statement, 4, Int64(limit))
+            var paths: [String] = []
+            while sqlite3_step(statement) == SQLITE_ROW {
+                paths.append(columnString(statement, 0))
+            }
+            return paths
+        }
+    }
+
     // MARK: - Binding helpers
 
     private func bind(_ statement: OpaquePointer?, _ index: Int32, _ value: String) {

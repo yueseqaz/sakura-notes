@@ -2,6 +2,25 @@
 
 All notable changes to Sakura Notes are documented here. The project follows [Semantic Versioning](https://semver.org/); it is in 0.x while the core is settling.
 
+## [0.1.1] — 2026-10-30
+
+### Fixed
+- **Crash on opening a note in the packaged app** (`SakuraNotes.app`): the SwiftPM
+  resource bundle required by `Bundle.module` was not copied into the bundle, so
+  the first preview render aborted (EXC_BREAKPOINT in `NSBundle.module`). The
+  bundle is now shipped in `Contents/Resources` and preview asset lookups
+  degrade gracefully instead of trapping.
+- **New windows opened nearly fullscreen**: fresh windows were sized from the
+  root view's ideal size, which the preview web view inflates. Windows now
+  default to 1180×760.
+- **Opening Markdown files from Finder**: double-click / Open With / dragging a
+  file onto the Dock icon now opens the containing folder as a workspace (if
+  needed) and selects the note. Folders open as workspaces.
+
+### Changed
+- Settings layout rewritten with the native grouped form style; README roadmap
+  restructured.
+
 ## [0.1.0] — 2026-10-30
 
 Initial public release.

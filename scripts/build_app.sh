@@ -101,9 +101,15 @@ if [ ! -f "$APP/Contents/Resources/AppIcon.icns" ]; then
     fi
 fi
 
-echo "==> Copying preview assets"
-mkdir -p "$APP/Contents/Resources/Preview"
-cp -R Sources/SakuraNotesApp/Resources/Preview/. "$APP/Contents/Resources/Preview/"
+echo "==> Copying SwiftPM resource bundle (required by Bundle.module)"
+BIN_DIR="$(swift build -c release --show-bin-path)"
+RES_BUNDLE="$BIN_DIR/SakuraNotes_SakuraNotesApp.bundle"
+if [ -d "$RES_BUNDLE" ]; then
+    cp -R "$RES_BUNDLE" "$APP/Contents/Resources/"
+else
+    echo "warning: resource bundle not found at $RES_BUNDLE — preview would crash; aborting" >&2
+    exit 1
+fi
 
 echo "==> Ad-hoc code signing"
 codesign --force --sign - "$APP" 2>/dev/null || echo "warning: codesign failed; continuing"

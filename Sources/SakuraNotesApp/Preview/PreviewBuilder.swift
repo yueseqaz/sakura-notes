@@ -127,4 +127,10 @@ enum PreviewBuilder {
         }
         return try? String(contentsOf: url, encoding: .utf8)
     }
+
+    /// Bundle resource lookup that degrades to nil (unstyled preview) instead
+    /// of failing when an asset is absent from a deployment.
+    static func resourceURL(_ name: String, ext: String, subdirectory: String) -> URL? {
+        Bundle.module.url(forResource: name, withExtension: ext, subdirectory: subdirectory)
+    }
 }

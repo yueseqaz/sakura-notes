@@ -10,6 +10,10 @@ struct SakuraNotesApp: App {
         WindowGroup("Sakura Notes") {
             WorkspaceRootView(environment: environment)
         }
+        // Without this, a fresh window is sized from the root view's ideal
+        // size — the preview WKWebView reports an enormous ideal size and the
+        // window opens nearly fullscreen ("editor area magnified").
+        .defaultSize(width: 1180, height: 760)
         .windowToolbarStyle(.unified)
         .commands {
             CommandGroup(replacing: .newItem) {
@@ -312,20 +316,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return .terminateNow
     }
 
-    func application(_ sender: NSApplication, openFile filename: String) -> Bool {
-        let url = URL(fileURLWithPath: filename)
-        var isDirectory: ObjCBool = false
-        if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) {
+    /// Finder integration: double-click/Open With on Markdown files, folders
+    /// dragged onto the Dock icon, etc.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        let environment = AppEnvironment.shared
+        for url in urls {
+            var isDirectory: ObjCBool = false
+            guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) else { continue }
             if isDirectory.boolValue {
-                AppEnvironment.shared.openWorkspace(at: url)
-                return true
-            } else if url.pathExtension.lowercased() == "md" {
-                // Open the containing folder as the workspace, then the note.
-                AppEnvironment.shared.openWorkspace(at: url.deletingLastPathComponent())
-                NotificationCenter.default.post(name: .sakuraOpenNote, object: nil, userInfo: ["path": url.lastPathComponent])
-                return true
+                environment.openWorkspace(at: url)
+                continue
+            }
+            let ext = url.pathExtension.lowercased()
+            guard ["md", "markdown", "mdown", "mkd", "txt", "text"].contains(ext) else { continue }
+            let inCurrentVault = environment.vault?.relativePath(for: url) != nil
+            if !inCurrentVault {
+                environment.openWorkspace(at: url.deletingLastPathComponent())
+            }
+            guard let relative = environment.vault?.relativePath(for: url) else { continue }
+            // Give a freshly opened workspace a beat to publish its scan.
+            DispatchQueue.main.asyncAfter(deadline: .now() + (inCurrentVault ? 0.05 : 0.6)) {
+                NotificationCenter.default.post(name: .sakuraOpenNote, object: nil, userInfo: ["path": relative])
             }
         }
-        return false
     }
 }

@@ -96,6 +96,10 @@ The **Tasks** sheet (⌥⌘T) aggregates every task in the workspace; clicking o
 - Snapshots are taken before conflict resolution, before AI edits apply, and when an external change would otherwise be overwritten.
 - If a file changes outside the app while you have unsaved edits, a comparison sheet appears with **Keep Mine / Take Theirs / Keep Both** (the "theirs" copy lands next to yours as a dated conflict file). Nothing is ever overwritten silently.
 
+## Opening files from Finder
+
+After launching the app once, you can open Markdown files from Finder via right-click → **Open With → Sakura Notes** (or by dragging a file onto the app icon). Opening a file outside any workspace opens its containing folder as a new workspace and selects the note; folders dragged onto the icon open as workspaces.
+
 ## Quick capture
 
 Press ⇧⌘Space anywhere: a small panel appears, type, ⌘⏎ appends the text with a timestamp to `<Quick capture folder>/Quick Notes.md`. The shortcut is re-recordable in Settings; if it doesn't fire, another app owns that combination.

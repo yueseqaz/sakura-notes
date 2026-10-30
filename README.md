@@ -125,11 +125,32 @@ Honest list of what is not implemented (yet):
 
 ## Roadmap
 
-1. Release builds with Developer ID signing + notarization
-2. Batch operations (multi-select in the note list)
-3. Reading mode with progress and presentation mode
-4. Spotlight indexing (opt-in) and Shortcuts actions
-5. Plugin API with a permission model once the core theming architecture stabilizes
+The 0.x releases finish the core; larger surface work follows only once what's underneath is stable. Items are grouped by theme — nothing is promised on a date, and the [known limitations](#known-limitations) list is the source this roadmap is worked from.
+
+**Trust and distribution**
+- Developer ID signing and notarized release builds (blocked on credentials, not code), then signed automatic updates
+- Reproducible, checksum-published release artifacts for every tag
+
+**Editing and organization**
+- Batch operations: multi-select in the note list for move/tag/trash
+- Per-note pinning and favorites; side-by-side comparison of two notes; tab drag-reordering
+- Saved searches; optional sandboxed custom CSS for the rendered preview
+
+**Knowledge**
+- Reading mode with progress and a presentation mode built from headings
+- Opt-in due-date reminders for `@due(...)` tasks (local notifications only)
+- Duplicate and stale-note detection, plus a link-maintenance dashboard for broken links and orphans
+
+**Platform integration**
+- Opt-in Spotlight indexing of note titles and paths
+- Shortcuts/AppIntents actions (open note, append capture, run AI action)
+- A plugin API with an explicit permission model — only after the theming architecture is stable enough to promise extension compatibility
+
+**Engineering**
+- Swift 6 strict-concurrency cleanup (the code currently compiles in language mode 5 by design; see docs/ARCHITECTURE.md)
+- Incremental FSEvents reconciliation for very large vaults (currently a debounced full rescan + diff)
+
+Have an opinion about what matters next? Open an issue — the roadmap is adjusted by real usage, not by checklist.
 
 ## Contributing
 

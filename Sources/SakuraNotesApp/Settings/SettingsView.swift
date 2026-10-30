@@ -137,8 +137,7 @@ struct SettingsView: View {
             aiTab.tabItem { Label("AI Assistant", systemImage: "sparkles") }
             advancedTab.tabItem { Label("Advanced", systemImage: "wrench.and.screwdriver") }
         }
-        .frame(width: 560, height: 480)
-        .padding(0)
+        .frame(width: 640, height: 520)
     }
 
     // MARK: - General
@@ -154,31 +153,46 @@ struct SettingsView: View {
                         environment.vault?.showsHiddenFiles = newValue
                     }
                 ))
-                Button("Add Workspace…") { WorkspacePicker.openAndSelect(environment: environment) }
-            }
-            Section("Daily Notes") {
-                TextField("Folder for daily notes", text: $settings.dailyNotesFolder)
-            }
-            Section("Templates") {
-                TextField("Folder for templates", text: $settings.templatesFolder)
-            }
-            Section("Attachments") {
-                TextField("Folder for images and attachments", text: $settings.attachmentsFolder)
-            }
-            Section("Quick Capture") {
-                HStack {
-                    Text("Global shortcut")
-                    Spacer()
-                    HotkeyRecorder(keyCode: $settings.quickCaptureKeyCode, modifiers: $settings.quickCaptureModifiers)
-                        .frame(width: 140)
+                LabeledContent("Current workspaces") {
+                    Button("Add Workspace…") { WorkspacePicker.openAndSelect(environment: environment) }
                 }
-                TextField("Save quick captures to folder", text: $settings.quickCaptureTargetFolder)
+            }
+            Section("Folders") {
+                LabeledContent("Daily notes") {
+                    TextField("", text: $settings.dailyNotesFolder, prompt: Text("Daily"))
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: .infinity)
+                }
+                LabeledContent("Templates") {
+                    TextField("", text: $settings.templatesFolder, prompt: Text("Templates"))
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: .infinity)
+                }
+                LabeledContent("Attachments") {
+                    TextField("", text: $settings.attachmentsFolder, prompt: Text("Attachments"))
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            Section {
+                LabeledContent("Global shortcut") {
+                    HotkeyRecorder(keyCode: $settings.quickCaptureKeyCode, modifiers: $settings.quickCaptureModifiers)
+                        .frame(width: 150)
+                }
+                LabeledContent("Save captures to") {
+                    TextField("", text: $settings.quickCaptureTargetFolder, prompt: Text("Inbox"))
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: .infinity)
+                }
+            } header: {
+                Text("Quick Capture")
+            } footer: {
                 Text("The shortcut works system-wide. If it doesn't respond, another app may already own that combination.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .padding(20)
+        .formStyle(.grouped)
     }
 
     @AppStorage("sakura.reopenLastWorkspace") private var reopenLast: Bool = true
@@ -188,58 +202,71 @@ struct SettingsView: View {
     private var editorTab: some View {
         Form {
             Section("Typography") {
-                Picker("Font", selection: $settings.editorFontName) {
-                    ForEach(SettingsStore.editorFontChoices, id: \.self) { name in
-                        Text(name).tag(name)
+                LabeledContent("Font") {
+                    Picker("", selection: $settings.editorFontName) {
+                        ForEach(SettingsStore.editorFontChoices, id: \.self) { name in
+                            Text(name).tag(name)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(width: 200)
+                }
+                LabeledContent("Size") {
+                    HStack(spacing: DS.spaceS) {
+                        Slider(value: $settings.editorFontSize, in: 11...28, step: 0.5)
+                        Text("\(Int(settings.editorFontSize)) pt")
+                            .frame(width: 46, alignment: .trailing)
+                            .monospacedDigit()
+                            .foregroundColor(.secondary)
                     }
                 }
-                HStack {
-                    Text("Size")
-                    Slider(value: $settings.editorFontSize, in: 11...28, step: 0.5)
-                    Text("\(Int(settings.editorFontSize)) pt")
-                        .frame(width: 46, alignment: .trailing)
-                        .monospacedDigit()
+                LabeledContent("Line spacing") {
+                    HStack(spacing: DS.spaceS) {
+                        Slider(value: $settings.editorLineSpacing, in: 0...14, step: 1)
+                        Text("\(Int(settings.editorLineSpacing)) pt")
+                            .frame(width: 46, alignment: .trailing)
+                            .monospacedDigit()
+                            .foregroundColor(.secondary)
+                    }
                 }
-                HStack {
-                    Text("Line spacing")
-                    Slider(value: $settings.editorLineSpacing, in: 0...14, step: 1)
-                    Text("\(Int(settings.editorLineSpacing)) pt")
-                        .frame(width: 46, alignment: .trailing)
-                        .monospacedDigit()
-                }
-                HStack {
-                    Text("Writing width")
-                    Slider(value: $settings.writingWidth, in: 480...1100, step: 20)
-                    Text("\(Int(settings.writingWidth)) pt")
-                        .frame(width: 46, alignment: .trailing)
-                        .monospacedDigit()
+                LabeledContent("Writing width") {
+                    HStack(spacing: DS.spaceS) {
+                        Slider(value: $settings.writingWidth, in: 480...1100, step: 20)
+                        Text("\(Int(settings.writingWidth)) pt")
+                            .frame(width: 46, alignment: .trailing)
+                            .monospacedDigit()
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
             Section("Behavior") {
                 Toggle("Check spelling", isOn: $settings.spellCheckEnabled)
-                HStack {
-                    Text("Autosave delay")
-                    Slider(value: $settings.autosaveDelay, in: 0.2...3, step: 0.1)
-                    Text(String(format: "%.1f s", settings.autosaveDelay))
-                        .frame(width: 46, alignment: .trailing)
-                        .monospacedDigit()
-                }
-            }
-            Section {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("The quick preview")
-                        .font(.headline)
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        Text("# Heading\nSome **bold** and *italic* text with `code` and a [link](https://example.com).")
-                            .font(.system(size: settings.editorFontSize))
-                            .lineSpacing(settings.editorLineSpacing)
-                            .padding(10)
-                            .background(RoundedRectangle(cornerRadius: 8).fill(Color.primary.opacity(0.05)))
+                LabeledContent("Autosave delay") {
+                    HStack(spacing: DS.spaceS) {
+                        Slider(value: $settings.autosaveDelay, in: 0.2...3, step: 0.1)
+                        Text(String(format: "%.1f s", settings.autosaveDelay))
+                            .frame(width: 46, alignment: .trailing)
+                            .monospacedDigit()
+                            .foregroundColor(.secondary)
                     }
                 }
             }
+            Section {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    Text("# Heading\nSome **bold** and *italic* text with `code` and a [link](https://example.com).")
+                        .font(.system(size: settings.editorFontSize))
+                        .lineSpacing(settings.editorLineSpacing)
+                        .padding(10)
+                        .background(RoundedRectangle(cornerRadius: 8).fill(Color.primary.opacity(0.05)))
+                }
+            } header: {
+                Text("Sample")
+            } footer: {
+                Text("A live preview of the typography settings above.")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
-        .padding(20)
+        .formStyle(.grouped)
     }
 
     // MARK: - Appearance
@@ -247,31 +274,39 @@ struct SettingsView: View {
     private var appearanceTab: some View {
         Form {
             Section("Theme") {
-                Picker("Appearance", selection: $settings.appearanceMode) {
-                    ForEach(SettingsStore.AppearanceMode.allCases) { mode in
-                        Text(mode.label).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-            }
-            Section("Accent") {
-                Picker("Accent color", selection: $settings.accentColorName) {
-                    ForEach(SettingsStore.accentColorNames, id: \.self) { name in
-                        HStack {
-                            Circle().fill(DS.accentColor(name)).frame(width: 12, height: 12)
-                            Text(name)
+                LabeledContent("Appearance") {
+                    Picker("", selection: $settings.appearanceMode) {
+                        ForEach(SettingsStore.AppearanceMode.allCases) { mode in
+                            Text(mode.label).tag(mode)
                         }
-                        .tag(name)
                     }
+                    .labelsHidden()
+                    .pickerStyle(.segmented)
+                    .frame(width: 280)
+                }
+                LabeledContent("Accent color") {
+                    Picker("", selection: $settings.accentColorName) {
+                        ForEach(SettingsStore.accentColorNames, id: \.self) { name in
+                            HStack {
+                                Circle().fill(DS.accentColor(name)).frame(width: 12, height: 12)
+                                Text(name)
+                            }
+                            .tag(name)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(width: 200)
                 }
             }
-            Section("Preview") {
+            Section {
                 Text("The preview follows the app appearance and your editor writing width. Code blocks use GitHub-style highlighting in matching light/dark variants.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+            } footer: {
+                Text("Changes apply immediately across the editor, note list, and rendered preview.")
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .padding(20)
+        .formStyle(.grouped)
     }
 
     // MARK: - AI
@@ -284,114 +319,162 @@ struct SettingsView: View {
     private var aiTab: some View {
         Form {
             if settings.aiProviders.isEmpty {
-                Text("No providers configured.")
-                Button("Add Provider") {
-                    settings.aiProviders.append(AIProviderConfig(name: "New Provider"))
-                    selectedProviderIndex = settings.aiProviders.count - 1
-                }
-            } else {
-                Picker("Provider", selection: $selectedProviderIndex) {
-                    ForEach(settings.aiProviders.indices, id: \.self) { index in
-                        Text(settings.aiProviders[index].name).tag(index)
+                Section("Provider") {
+                    Text("No AI provider configured yet.")
+                    Button("Add Provider") {
+                        settings.aiProviders.append(AIProviderConfig(name: "New Provider"))
+                        selectedProviderIndex = settings.aiProviders.count - 1
                     }
                 }
-                .onChange(of: selectedProviderIndex) { newValue in
-                    settings.activeAIProviderID = settings.aiProviders[newValue].id
+            } else {
+                Section("Provider") {
+                    LabeledContent("Active provider") {
+                        Picker("", selection: $selectedProviderIndex) {
+                            ForEach(settings.aiProviders.indices, id: \.self) { index in
+                                Text(settings.aiProviders[index].name).tag(index)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(width: 220)
+                    }
+                    .onChange(of: selectedProviderIndex) { newValue in
+                        settings.activeAIProviderID = settings.aiProviders[newValue].id
+                    }
                 }
                 if selectedProviderIndex < settings.aiProviders.count {
                     let binding = $settings.aiProviders[selectedProviderIndex]
                     Section("Endpoint") {
-                        TextField("Name", text: binding.name)
-                        TextField("Base URL", text: binding.baseURL)
-                            .font(.system(.body, design: .monospaced))
-                        TextField("Model", text: binding.model)
-                        HStack {
-                            Button("Fetch Models") { fetchModels(provider: binding.wrappedValue) }
-                                .disabled(testingConnection)
-                            if !fetchedModels.isEmpty {
+                        LabeledContent("Name") {
+                            TextField("", text: binding.name, prompt: Text("Provider name"))
+                                .textFieldStyle(.roundedBorder)
+                                .frame(maxWidth: .infinity)
+                        }
+                        LabeledContent("Base URL") {
+                            TextField("", text: binding.baseURL, prompt: Text("https://api.openai.com/v1"))
+                                .textFieldStyle(.roundedBorder)
+                                .font(.system(.body, design: .monospaced))
+                                .frame(maxWidth: .infinity)
+                        }
+                        LabeledContent("Model") {
+                            HStack(spacing: DS.spaceS) {
+                                TextField("", text: binding.model, prompt: Text("model id"))
+                                    .textFieldStyle(.roundedBorder)
+                                    .font(.system(.body, design: .monospaced))
+                                    .frame(maxWidth: .infinity)
+                                Button("Fetch Models") { fetchModels(provider: binding.wrappedValue) }
+                                    .disabled(testingConnection)
+                            }
+                        }
+                        if !fetchedModels.isEmpty {
+                            LabeledContent("Available models") {
                                 Picker("", selection: binding.model) {
                                     ForEach(fetchedModels, id: \.self) { model in
                                         Text(model).tag(model)
                                     }
                                 }
-                                .frame(width: 220)
+                                .labelsHidden()
+                                .frame(width: 260)
                             }
                         }
-                    }
-                    Section("API Key") {
-                        HStack {
-                            SecureField("Stored securely in your Keychain", text: $apiKeyDraft)
-                                .font(.system(.body, design: .monospaced))
-                            Button("Save") { saveKey(provider: binding.wrappedValue) }
-                                .disabled(apiKeyDraft.isEmpty)
-                            Button("Remove") { removeKey(provider: binding.wrappedValue) }
-                        }
-                        Text(keyStatus(for: binding.wrappedValue))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    Section("Behavior") {
-                        HStack {
-                            Text("Temperature")
-                            Slider(value: binding.temperature, in: 0...1.5, step: 0.05)
-                            Text(String(format: "%.2f", binding.wrappedValue.temperature))
-                                .monospacedDigit()
-                                .frame(width: 40, alignment: .trailing)
-                        }
-                        HStack {
-                            Text("Request timeout (s)")
-                            Slider(value: Binding(
-                                get: { binding.wrappedValue.requestTimeout },
-                                set: { binding.wrappedValue.requestTimeout = $0 }
-                            ), in: 10...180, step: 5)
-                            Text("\(Int(binding.wrappedValue.requestTimeout))")
-                                .frame(width: 40, alignment: .trailing)
-                                .monospacedDigit()
-                        }
-                        HStack {
-                            Text("Context budget")
-                            Slider(value: Binding(
-                                get: { Double(settings.aiContextBudget) },
-                                set: { settings.aiContextBudget = Int($0) }
-                            ), in: 4000...80000, step: 2000)
-                            Text("\(settings.aiContextBudget / 1000)k")
-                                .frame(width: 40, alignment: .trailing)
-                                .monospacedDigit()
-                        }
-                        TextField("Translation target language", text: $settings.aiTranslationLanguage)
                     }
                     Section {
-                        HStack {
-                            Button(testingConnection ? "Testing…" : "Test Connection") {
-                                testConnection(provider: binding.wrappedValue)
-                            }
-                            .disabled(testingConnection)
-                            Button("Remove Provider", role: .destructive) {
-                                removeKey(provider: binding.wrappedValue)
-                                settings.aiProviders.remove(at: selectedProviderIndex)
-                                selectedProviderIndex = 0
-                            }
-                            Spacer()
-                            Button("Add Provider") {
-                                settings.aiProviders.append(AIProviderConfig(name: "New Provider"))
-                                selectedProviderIndex = settings.aiProviders.count - 1
+                        LabeledContent("API key") {
+                            HStack(spacing: DS.spaceS) {
+                                SecureField("", text: $apiKeyDraft, prompt: Text("Paste API key"))
+                                    .font(.system(.body, design: .monospaced))
+                                    .frame(maxWidth: .infinity)
+                                Button("Save") { saveKey(provider: binding.wrappedValue) }
+                                    .disabled(apiKeyDraft.isEmpty)
+                                Button("Remove") { removeKey(provider: binding.wrappedValue) }
                             }
                         }
-                        if let testResult {
-                            Text(testResult)
-                                .font(.caption)
-                                .foregroundColor(testResult.hasPrefix("✓") ? .green : .red)
+                    } header: {
+                        Text("API Key")
+                    } footer: {
+                        Text(keyStatus(for: binding.wrappedValue) + " Keys are stored in the macOS Keychain and never written to notes or logs.")
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    Section("Behavior") {
+                        LabeledContent("Temperature") {
+                            HStack(spacing: DS.spaceS) {
+                                Slider(value: binding.temperature, in: 0...1.5, step: 0.05)
+                                Text(String(format: "%.2f", binding.wrappedValue.temperature))
+                                    .monospacedDigit()
+                                    .frame(width: 40, alignment: .trailing)
+                                    .foregroundColor(.secondary)
+                            }
                         }
+                        LabeledContent("Request timeout") {
+                            HStack(spacing: DS.spaceS) {
+                                Slider(value: Binding(
+                                    get: { binding.wrappedValue.requestTimeout },
+                                    set: { binding.wrappedValue.requestTimeout = $0 }
+                                ), in: 10...180, step: 5)
+                                Text("\(Int(binding.wrappedValue.requestTimeout)) s")
+                                    .monospacedDigit()
+                                    .frame(width: 40, alignment: .trailing)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        LabeledContent("Context budget") {
+                            HStack(spacing: DS.spaceS) {
+                                Slider(value: Binding(
+                                    get: { Double(settings.aiContextBudget) },
+                                    set: { settings.aiContextBudget = Int($0) }
+                                ), in: 4000...80000, step: 2000)
+                                Text("\(settings.aiContextBudget / 1000)k")
+                                    .monospacedDigit()
+                                    .frame(width: 40, alignment: .trailing)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        LabeledContent("Translate into") {
+                            TextField("", text: $settings.aiTranslationLanguage, prompt: Text("English"))
+                                .textFieldStyle(.roundedBorder)
+                                .frame(width: 180)
+                        }
+                    }
+                    Section {
+                        LabeledContent("Connection") {
+                            HStack(spacing: DS.spaceS) {
+                                Button(testingConnection ? "Testing…" : "Test Connection") {
+                                    testConnection(provider: binding.wrappedValue)
+                                }
+                                .disabled(testingConnection)
+                                Button("Remove Provider", role: .destructive) {
+                                    removeKey(provider: binding.wrappedValue)
+                                    settings.aiProviders.remove(at: selectedProviderIndex)
+                                    selectedProviderIndex = 0
+                                }
+                                Spacer()
+                                Button("Add Provider") {
+                                    settings.aiProviders.append(AIProviderConfig(name: "New Provider"))
+                                    selectedProviderIndex = settings.aiProviders.count - 1
+                                }
+                            }
+                        }
+                    } footer: {
+                        Group {
+                            if let testResult {
+                                Text(testResult)
+                            } else {
+                                Text("Sends a one-word completion to verify the endpoint and key work.")
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
             }
-            Section("Privacy") {
+            Section {
                 Text("Sakura Notes never sends your notes anywhere on its own. Note content is transmitted only when you run an AI action or ask a question, using the endpoint and key configured here. API keys are stored in the macOS Keychain and never written to notes or logs.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+            } header: {
+                Text("Privacy")
+            } footer: {
+                Text("")
             }
         }
-        .padding(20)
+        .formStyle(.grouped)
     }
 
     @VS private var apiKeyDraft: String = ""
@@ -460,34 +543,43 @@ struct SettingsView: View {
 
     private var advancedTab: some View {
         Form {
-            Section("Search Index") {
-                HStack {
-                    Text("\(environment.searchCoordinator?.noteCount ?? 0) notes indexed")
-                    Spacer()
-                    Button("Rebuild Index") {
-                        if let vault = environment.vault {
-                            environment.searchCoordinator?.rebuildAll(vault: vault)
+            Section {
+                LabeledContent("Indexed notes") {
+                    HStack(spacing: DS.spaceS) {
+                        Text("\(environment.searchCoordinator?.noteCount ?? 0)")
+                            .monospacedDigit()
+                            .foregroundColor(.secondary)
+                        Button("Rebuild Index") {
+                            if let vault = environment.vault {
+                                environment.searchCoordinator?.rebuildAll(vault: vault)
+                            }
                         }
                     }
                 }
+            } header: {
+                Text("Search Index")
+            } footer: {
                 Text("The index is derived data stored in Application Support; it can be rebuilt from your files at any time.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            Section("Version History") {
-                HStack {
-                    Text("\(environment.snapshotStore.totalCount()) snapshots stored")
-                    Text("· up to \(SnapshotStore.maxSnapshotsPerNote) per note")
+            Section {
+                LabeledContent("Stored snapshots") {
+                    Text("\(environment.snapshotStore.totalCount()) · up to \(SnapshotStore.maxSnapshotsPerNote) per note")
+                        .monospacedDigit()
                         .foregroundColor(.secondary)
                 }
-                .font(.callout)
+            } header: {
+                Text("Version History")
             }
             Section("Reset") {
-                Button("Clear Recent Files", role: .destructive) {
-                    environment.workspaceStore.clearRecentFiles()
+                LabeledContent("Recent files") {
+                    Button("Clear", role: .destructive) {
+                        environment.workspaceStore.clearRecentFiles()
+                    }
                 }
             }
         }
-        .padding(20)
+        .formStyle(.grouped)
     }
 }

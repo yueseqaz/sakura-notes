@@ -107,8 +107,21 @@ RES_BUNDLE="$BIN_DIR/SakuraNotes_SakuraNotesApp.bundle"
 if [ -d "$RES_BUNDLE" ]; then
     cp -R "$RES_BUNDLE" "$APP/Contents/Resources/"
 else
-    echo "warning: resource bundle not found at $RES_BUNDLE — preview would crash; aborting" >&2
+    echo "error: resource bundle not found at $RES_BUNDLE — the preview would crash; aborting" >&2
     exit 1
+fi
+
+# Normalize the resource bundle to the standard macOS layout
+# (<bundle>/Contents/{Resources,Info.plist}). Some SwiftPM versions emit a
+# flat layout that Bundle(url:) cannot load, which would crash Bundle.module
+# on the first preview render.
+RES_BUNDLE_DIR="$APP/Contents/Resources/SakuraNotes_SakuraNotesApp.bundle"
+if [ ! -f "$RES_BUNDLE_DIR/Contents/Info.plist" ]; then
+    echo "==> Normalizing flat resource bundle layout"
+    mkdir -p "$RES_BUNDLE_DIR/Contents/Resources"
+    find "$RES_BUNDLE_DIR" -maxdepth 1 -mindepth 1 ! -name Contents \
+        -exec mv {} "$RES_BUNDLE_DIR/Contents/Resources/" \;
+    printf '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n    <key>CFBundleIdentifier</key>\n    <string>${BUNDLE_ID}.resources</string>\n    <key>CFBundleName</key>\n    <string>SakuraNotes_SakuraNotesApp</string>\n    <key>CFBundlePackageType</key>\n    <string>BNDL</string>\n    <key>CFBundleShortVersionString</key>\n    <string>${VERSION#v}</string>\n</dict>\n</plist>\n' > "$RES_BUNDLE_DIR/Contents/Info.plist"
 fi
 
 echo "==> Ad-hoc code signing"
